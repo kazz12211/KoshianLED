@@ -79,20 +79,24 @@ class Koshian: NSObject {
     }
     
     func disconnect() {
-        print("Disconnecting Koshian")
-        centralManager.cancelPeripheralConnection(peripheral)
+        if connected {
+            print("Disconnecting Koshian")
+            centralManager.cancelPeripheralConnection(peripheral)
+        }
     }
     
     func connect() {
-        print("Scanning Koshian")
-        connectionTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: false, block: { (timer) in
-            if self.connected == false {
-                print("Connection Timeout")
-                NotificationCenter.default.post(name: KoshianConstants.KoshianConnectionTimeout, object: self)
-                self.centralManager.stopScan()
-            }
-        })
-        centralManager.scanForPeripherals(withServices: nil, options: nil)
+        if !connected {
+            print("Scanning Koshian")
+            connectionTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: false, block: { (timer) in
+                if self.connected == false {
+                    print("Connection Timeout")
+                    NotificationCenter.default.post(name: KoshianConstants.KoshianConnectionTimeout, object: self)
+                    self.centralManager.stopScan()
+                }
+            })
+            centralManager.scanForPeripherals(withServices: nil, options: nil)
+        }
     }
     
     func createUUIDFromString(_ string: String!) -> CBUUID! {
@@ -291,6 +295,7 @@ extension Koshian: CBCentralManagerDelegate {
         self.pioOutput = 0
         self.pioSetting = 0
         self.pioPullup = 0
+        self.connected = false
         NotificationCenter.default.post(name: KoshianConstants.KoshianDisconnected, object: self)
     }
 

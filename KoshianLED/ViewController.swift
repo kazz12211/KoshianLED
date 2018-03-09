@@ -32,6 +32,7 @@ class ViewController: UIViewController {
 
     @IBAction func connect(_ sender: Any) {
         if koshian.connected {
+            koshian.digitalWrite(pin: KoshianConstants.DigitalIO5, value: KoshianConstants.LOW)
             koshian.disconnect()
         } else {
             koshian.connect()
@@ -42,6 +43,7 @@ class ViewController: UIViewController {
         koshian.pinMode(pin: KoshianConstants.DigitalIO1, mode: KoshianConstants.PinModeOutput)
         koshian.pinMode(pin: KoshianConstants.DigitalIO3, mode: KoshianConstants.PinModeOutput)
         koshian.pinMode(pin: KoshianConstants.DigitalIO5, mode: KoshianConstants.PinModeOutput)
+        koshian.digitalWrite(pin: KoshianConstants.DigitalIO5, value: KoshianConstants.HIGH)
         connectButton.setTitle("Disconnect", for: UIControlState.normal)
         blinkButton.addTarget(self, action: #selector(startBlinking(_:)), for: UIControlEvents.touchUpInside)
         blinkButton.isHidden = false
