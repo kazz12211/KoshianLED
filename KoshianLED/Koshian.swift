@@ -61,7 +61,7 @@ class Koshian: NSObject {
     
     var peripheral: CBPeripheral!
     var services: [CBService] = []
-    var characteristics: [CBUUID: [CBUUID:CBCharacteristic]] = [CBUUID: [CBUUID:CBCharacteristic]]()
+    var characteristics = [String: [CBCharacteristic]]()
     
     var centralManager: CBCentralManager!
     var localName: String!
@@ -92,7 +92,7 @@ class Koshian: NSObject {
                 self.centralManager.stopScan()
             }
         })
-        centralManager.scanForPeripherals(withServices: [batteryServiceUUID(), levelServiceUUID(), powerStateUUID(), serviceUUID()], options: nil)
+        centralManager.scanForPeripherals(withServices: nil, options: nil)
     }
     
     func createUUIDFromString(_ string: String!) -> CBUUID! {
@@ -163,9 +163,16 @@ class Koshian: NSObject {
     }
     
     func lookupCharacteristic(serviceUUID: CBUUID, characteristicUUID: CBUUID) -> CBCharacteristic! {
-        let chars = characteristics[serviceUUID]
-        let char = chars![characteristicUUID]
-        return char!
+        guard let chars = characteristics[serviceUUID.uuidString] else {
+            return nil
+        }
+        for char in chars {
+            let c = char as CBCharacteristic
+            if c.uuid.isEqual(characteristicUUID) {
+                return c
+            }
+        }
+        return nil
     }
     
     func pinMode(pin: UInt8, mode: UInt8) -> Int {
@@ -292,7 +299,7 @@ extension Koshian: CBCentralManagerDelegate {
         self.peripheral = peripheral
         self.peripheral.delegate = self
         self.services.removeAll()
-        self.peripheral.discoverServices([batteryServiceUUID(), levelServiceUUID(), powerStateUUID(), serviceUUID()])
+        self.peripheral.discoverServices(nil)
     }
 
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
@@ -316,19 +323,32 @@ extension Koshian: CBPeripheralDelegate {
    
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         for service in peripheral.services! {
+            print("Found service \(service.uuid)")
             services.append(service)
-            self.peripheral.discoverCharacteristics(nil, for: service)
+            peripheral.discoverCharacteristics(nil, for: service)
         }
     }
     
-    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
-        for c in service.characteristics! {
-            characteristics[service.uuid] = [c.uuid: c]
+    private func notifyWhenReady() {
+        for s in services {
+            let chars = characteristics[s.uuid.uuidString]
+            if chars?.count == 0 {
+                return
+            }
         }
         connected = true
-        connectionTimer.invalidate()
-        connectionTimer = nil
+        if connectionTimer != nil {
+            connectionTimer.invalidate()
+            connectionTimer = nil
+        }
         NotificationCenter.default.post(name: KoshianConstants.KoshianConnected, object: self)
+    }
+    
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
+        print("Found characteristic \(String(describing: service.characteristics)) for service \(String(describing: service))")
+        characteristics[service.uuid.uuidString] = service.characteristics
+        print("Saved characteristics \(String(describing: self.characteristics))")
+        notifyWhenReady()
     }
 
 }

@@ -43,6 +43,7 @@ class ViewController: UIViewController {
         koshian.pinMode(pin: KoshianConstants.DigitalIO3, mode: KoshianConstants.PinModeOutput)
         koshian.pinMode(pin: KoshianConstants.DigitalIO5, mode: KoshianConstants.PinModeOutput)
         connectButton.setTitle("Disconnect", for: UIControlState.normal)
+        blinkButton.addTarget(self, action: #selector(startBlinking(_:)), for: UIControlEvents.touchUpInside)
         blinkButton.isHidden = false
         speedRangeController.isHidden = false
     }
