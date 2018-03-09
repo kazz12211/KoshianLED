@@ -11,32 +11,54 @@ import CoreBluetooth
 
 class ViewController: UIViewController {
 
-    var centralManager: CBCentralManager!
-    var konashi: CBPeripheral!
-    var konashiService: CBService!
-    var pioSetting : CBCharacteristic!
-    var pio: CBCharacteristic!
     var blinking: Bool = false
     @IBOutlet weak var connectButton: UIButton!
     @IBOutlet weak var blinkButton: UIButton!
     var blinkTimer: Timer!
     var value: Bool = true
+    @IBOutlet weak var speedRangeController: UISegmentedControl!
+    var koshian: Koshian!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         blinkButton.isHidden = true
-        
-        centralManager = CBCentralManager(delegate: self, queue: nil, options:nil)
-        
+        speedRangeController.isHidden = true
+        koshian = Koshian(localName: "konashi2-f02226")
+        NotificationCenter.default.addObserver(self, selector: #selector(ViewController.koshianReady(notif:)), name: KoshianConstants.KoshianConnected, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(ViewController.koshianNotReady(notif:)), name: KoshianConstants.KoshianDisconnected, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(ViewController.koshianTimeout(notif:)), name: KoshianConstants.KoshianConnectionTimeout, object: nil)
     }
 
     @IBAction func connect(_ sender: Any) {
-        if konashi != nil {
-            centralManager.cancelPeripheralConnection(konashi)
-            konashi = nil
+        if koshian.connected {
+            koshian.disconnect()
         } else {
-            centralManager.scanForPeripherals(withServices: nil, options: nil)
+            koshian.connect()
+        }
+    }
+    
+    @objc func koshianReady(notif: Notification) {
+        koshian.pinMode(pin: KoshianConstants.DigitalIO1, mode: KoshianConstants.PinModeOutput)
+        koshian.pinMode(pin: KoshianConstants.DigitalIO3, mode: KoshianConstants.PinModeOutput)
+        koshian.pinMode(pin: KoshianConstants.DigitalIO5, mode: KoshianConstants.PinModeOutput)
+        connectButton.setTitle("Disconnect", for: UIControlState.normal)
+        blinkButton.isHidden = false
+        speedRangeController.isHidden = false
+    }
+    
+    @objc func koshianNotReady(notif: Notification) {
+        connectButton.setTitle("Connect", for: UIControlState.normal)
+        blinkButton.isHidden = true
+        speedRangeController.isHidden = true
+    }
+    
+    @objc func koshianTimeout(notif: Notification) {
+        let alert = UIAlertController(title: "Koshian", message: "Connection timeout", preferredStyle: UIAlertControllerStyle.alert)
+        let defaultAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default) { (action) in
+        }
+        alert.addAction(defaultAction)
+        self.present(alert, animated: true) {
         }
     }
     
@@ -46,9 +68,31 @@ class ViewController: UIViewController {
             blinkButton.addTarget(self, action: #selector(stopBlinking(_:)), for: UIControlEvents.touchUpInside)
             blinking = true
             blinkTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true, block: {_ in
-                self.digitalWrite(pin:1, value:self.value ? 1 : 0)
-                self.value = !self.value
+                switch self.speedRangeController.selectedSegmentIndex {
+                case 0:
+                    self.koshian.digitalWrite(pin: KoshianConstants.DigitalIO3, value: 1)
+                    self.koshian.digitalWrite(pin: KoshianConstants.DigitalIO1, value: 0)
+               case 1:
+                    self.koshian.digitalWrite(pin: KoshianConstants.DigitalIO3, value: self.value ? 1 : 0)
+                    self.koshian.digitalWrite(pin: KoshianConstants.DigitalIO1, value: 0)
+                    self.value = !self.value
+                case 2:
+                    self.koshian.digitalWrite(pin: KoshianConstants.DigitalIO3, value: self.value ? 1 : 0)
+                    self.koshian.digitalWrite(pin: KoshianConstants.DigitalIO1, value: self.value ? 0 : 1)
+                    self.value = !self.value
+                default:
+                    self.koshian.digitalWrite(pin: KoshianConstants.DigitalIO3, value: 0)
+                    self.koshian.digitalWrite(pin: KoshianConstants.DigitalIO1, value: 0)
+                    self.value = true
+                }
             })
+            blinkTimer.fire()
+        }
+    }
+    
+    private func rescheduleTimer() {
+        if !blinking && blinkTimer != nil {
+            blinkTimer.invalidate()
             blinkTimer.fire()
         }
     }
@@ -58,93 +102,17 @@ class ViewController: UIViewController {
             blinkButton.setTitle("Blink", for: UIControlState.normal)
             blinkButton.addTarget(self, action: #selector(startBlinking(_:)), for: UIControlEvents.touchUpInside)
             blinking = false
-            self.digitalWrite(pin:1, value:0)
+            self.koshian.digitalWrite(pin: KoshianConstants.DigitalIO3, value: 0)
+            self.koshian.digitalWrite(pin: KoshianConstants.DigitalIO1, value: 0)
             blinkTimer.invalidate()
         }
     }
     
-    func digitalWrite(pin: Int, value: Int) -> Void {
-        var value = UInt8(0x01 << value)
-        let data = Data(buffer: UnsafeBufferPointer(start: &value, count: MemoryLayout<UInt8>.size))
-        konashi.writeValue(data, for: pio, type: CBCharacteristicWriteType.withoutResponse)
+    @IBAction func changeSpeedRange(_ sender: UISegmentedControl) {
+        rescheduleTimer()
     }
+    
 }
 
-extension ViewController: CBCentralManagerDelegate {
-    
-    func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        switch central.state {
-        case .poweredOn:
-            print("powerOn")
-        default:
-            print("central.state = \(central.state)")
-        }
-    }
-    
-    func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
-        let localName = advertisementData["kCBAdvDataLocalName"] as? String
-        if localName == "konashi2-f02226" {
-            central.stopScan()
-            print("\(localName ?? "") found")
-            konashi = peripheral
-            print("connecting")
-            central.connect(konashi, options: nil)
-        }
-    }
-    
-    func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        print("connected")
-        konashi.delegate = self
-        konashiService = nil
-        konashi.discoverServices(nil)
-    }
-    
-    func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
-        print("disconnected")
-        konashi = nil
-        konashiService = nil
-        pioSetting = nil
-        pio = nil
-        
-        connectButton.setTitle("Connect", for: UIControlState.normal)
-        blinkButton.isHidden = true
-    }
-}
 
-extension ViewController: CBPeripheralDelegate {
-    
-    func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
-        for service in peripheral.services! {
-            if service.uuid.uuidString == "229BFF00-03FB-40DA-98A7-B0DEF65C2D4B" {
-                print("found service")
-                konashiService = service
-                konashi.discoverCharacteristics(nil, for: konashiService)
-                break
-            }
-        }
-    }
-    
-    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
-        for c in service.characteristics! {
-            if c.uuid.uuidString == "229B3002-03FB-40DA-98A7-B0DEF65C2D4B" {
-                pio = c
-            }
-            if c.uuid.uuidString == "229B3000-03FB-40DA-98A7-B0DEF65C2D4B" {
-                pioSetting = c
-            }
-        }
-        
-        var pinMode = UInt8(0x01 << 1)
-        let data = Data(buffer: UnsafeBufferPointer(start: &pinMode, count: MemoryLayout<UInt8>.size))
-        konashi.writeValue(data, for: pioSetting, type: CBCharacteristicWriteType.withoutResponse)
-
-        print("pioSetting \(pioSetting.uuid)")
-        print("pio \(pio.uuid)")
-        connectButton.setTitle("Disconnect", for: UIControlState.normal)
-        blinkButton.isHidden = false
-        blinkButton.setTitle("Blink", for: UIControlState.normal)
-        blinkButton.addTarget(self, action: #selector(startBlinking(_:)), for: UIControlEvents.touchUpInside)
-        blinking = false
-   }
-}
 

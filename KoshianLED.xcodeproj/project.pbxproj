@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F8336C9220520C1F009A4DBF /* Koshian.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8336C9120520C1F009A4DBF /* Koshian.swift */; };
 		F83C6279205118BA004BB4D3 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F83C6278205118BA004BB4D3 /* AppDelegate.swift */; };
 		F83C627B205118BA004BB4D3 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F83C627A205118BA004BB4D3 /* ViewController.swift */; };
 		F83C627E205118BA004BB4D3 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F83C627C205118BA004BB4D3 /* Main.storyboard */; };
@@ -16,6 +17,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		F8336C9120520C1F009A4DBF /* Koshian.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Koshian.swift; sourceTree = "<group>"; };
 		F83C6275205118BA004BB4D3 /* KoshianLED.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KoshianLED.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F83C6278205118BA004BB4D3 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		F83C627A205118BA004BB4D3 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -64,6 +66,7 @@
 				F83C627F205118BA004BB4D3 /* Assets.xcassets */,
 				F83C6281205118BA004BB4D3 /* LaunchScreen.storyboard */,
 				F83C6284205118BA004BB4D3 /* Info.plist */,
+				F8336C9120520C1F009A4DBF /* Koshian.swift */,
 			);
 			path = KoshianLED;
 			sourceTree = "<group>";
@@ -148,6 +151,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F8336C9220520C1F009A4DBF /* Koshian.swift in Sources */,
 				F83C627B205118BA004BB4D3 /* ViewController.swift in Sources */,
 				F83C6279205118BA004BB4D3 /* AppDelegate.swift in Sources */,
 			);

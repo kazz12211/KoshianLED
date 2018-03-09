@@ -37,9 +37,26 @@
                                 </constraints>
                                 <state key="normal" title="Blink"/>
                             </button>
+                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="j4Q-KX-6iS">
+                                <rect key="frame" x="92" y="176" width="191" height="29"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="191" id="gMs-X8-HZY"/>
+                                    <constraint firstAttribute="height" constant="28" id="o4L-9a-0oC"/>
+                                </constraints>
+                                <segments>
+                                    <segment title="Slow"/>
+                                    <segment title="Medium"/>
+                                    <segment title="High"/>
+                                </segments>
+                                <connections>
+                                    <action selector="changeSpeedRange:" destination="BYZ-38-t0r" eventType="valueChanged" id="DXQ-mc-UWu"/>
+                                </connections>
+                            </segmentedControl>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
+                            <constraint firstItem="j4Q-KX-6iS" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="Oqe-dP-4RZ"/>
+                            <constraint firstItem="j4Q-KX-6iS" firstAttribute="top" secondItem="WKq-QT-Iub" secondAttribute="bottom" constant="37" id="U0M-Ot-KsF"/>
                             <constraint firstItem="WKq-QT-Iub" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="YPE-Yb-H7t"/>
                             <constraint firstItem="7I5-VH-K0V" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="35" id="YZO-6J-LCE"/>
                             <constraint firstItem="WKq-QT-Iub" firstAttribute="top" secondItem="7I5-VH-K0V" secondAttribute="bottom" constant="24" id="oJf-99-YZ7"/>
@@ -50,6 +67,7 @@
                     <connections>
                         <outlet property="blinkButton" destination="WKq-QT-Iub" id="wN9-eA-nKP"/>
                         <outlet property="connectButton" destination="7I5-VH-K0V" id="Hld-Bp-Bsj"/>
+                        <outlet property="speedRangeController" destination="j4Q-KX-6iS" id="Een-K4-lao"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
